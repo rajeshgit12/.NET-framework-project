@@ -1,0 +1,141 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Data.SqlClient;
+using System.Drawing;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Xml.Linq;
+
+namespace Registerforn
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        SqlConnection con = new SqlConnection(@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=ajiodb;Integrated Security=true");
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            listBox1.Text = "---Select Brand---";
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            string q = "insert into products(name,brand,price,quant,rate) values(@n,@b,@p,@q,@r)";
+            SqlCommand cmd = new SqlCommand(q, con);
+            cmd.Parameters.AddWithValue("@n", textBox1.Text);
+            cmd.Parameters.AddWithValue("@b", listBox1.Text);
+            cmd.Parameters.AddWithValue("@p", textBox3.Text);
+            cmd.Parameters.AddWithValue("@q", textBox4.Text);
+
+            string rate = "";
+            if (radioButton1.Checked) { rate = "Fixed"; }
+            else if (radioButton2.Checked) { rate = "Custom"; }
+            cmd.Parameters.AddWithValue("@r", rate);
+
+            con.Open();
+            int res = cmd.ExecuteNonQuery();
+            MessageBox.Show(res != 0 ? "Registered" : "Failed");
+            con.Close();
+            string p = "select count(id) from products";
+            SqlCommand cmd1 = new SqlCommand(p, con);
+            con.Open();
+            int count = (int)cmd1.ExecuteScalar();
+            textBox6.Text = count.ToString();
+            con.Close();
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            textBox1.Clear();
+            listBox1.Text = "---Select Brand---";
+            textBox3.Clear();
+            textBox4.Clear();
+            radioButton1.Checked = false;
+            radioButton2.Checked = false;
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            string q = "update products set price=@p,quant=@q where id=@i";
+            SqlCommand cmd = new SqlCommand(q, con);
+
+            cmd.Parameters.AddWithValue("@p", textBox3.Text);
+            cmd.Parameters.AddWithValue("@q", textBox4.Text);
+            cmd.Parameters.AddWithValue("@i", textBox5.Text);
+
+            con.Open();
+            int res = cmd.ExecuteNonQuery();
+            MessageBox.Show(res != 0 ? "Updated" : "Failed");
+            con.Close();
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            string q = "delete from products where id=@i";
+            SqlCommand cmd = new SqlCommand(q, con);
+
+            cmd.Parameters.AddWithValue("@i", textBox5.Text);
+            con.Open();
+            int res = cmd.ExecuteNonQuery();
+            MessageBox.Show(res != 0 ? "Deleted" : "Failed");
+            con.Close();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            string q = "select name,brand,price,quant,rate from products where id=@i";
+            SqlCommand cmd = new SqlCommand(q, con);
+            cmd.Parameters.AddWithValue("@i", textBox5.Text);
+            con.Open();
+            SqlDataReader sdr = cmd.ExecuteReader();
+            if (sdr.Read())
+            {
+                textBox1.Text = sdr["name"].ToString();
+                listBox1.Text = sdr["brand"].ToString();
+                textBox3.Text = sdr["price"].ToString();
+                textBox4.Text = sdr["quant"].ToString();
+                string rate = sdr["rate"].ToString();
+                if (rate == "Fixed") { radioButton1.Checked = true; }
+                else if (rate == "Custom") { radioButton2.Checked = true; }
+                MessageBox.Show("Data Loaded");
+            }
+            else
+            {
+                MessageBox.Show("data not available");
+            }
+            con.Close() ;
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            string q = "select *from products";
+            SqlDataAdapter sda = new SqlDataAdapter(q, con);
+            DataSet ds = new DataSet();
+            sda.Fill(ds);
+
+            dataGridView1.DataSource = ds;
+            dataGridView1.DataMember = "table";
+        }
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            
+        }
+
+        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+
+
+        }
+    }
+}
